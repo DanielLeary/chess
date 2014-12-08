@@ -1,7 +1,7 @@
-all: ChessMain
+all: chess
 
-ChessMain: ChessMain.o ChessBoard.o Piece.o King.o Queen.o Castle.o Bishop.o Knight.o Pawn.o
-	g++ -g ChessMain.o ChessBoard.o Piece.o King.o Queen.o Castle.o Bishop.o Knight.o Pawn.o -o ChessMain
+chess: ChessMain.o ChessBoard.o Piece.o King.o Queen.o Castle.o Bishop.o Knight.o Pawn.o
+	g++ -g ChessMain.o ChessBoard.o Piece.o King.o Queen.o Castle.o Bishop.o Knight.o Pawn.o -o chess
 
 ChessMain.o: ChessMain.cpp
 	g++ -g -c ChessMain.cpp

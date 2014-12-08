@@ -49,7 +49,7 @@ class ChessBoard {
 		string get_king_square(colour player);
 
 		/*
-		bool isInCheckMate(colour player);
+		bool is_in_checkmate(string king_square);
 		*/
 
 		// returns opponent colour as enum type or string
