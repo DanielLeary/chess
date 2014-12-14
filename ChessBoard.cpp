@@ -4,9 +4,7 @@ using namespace std;
 
 ChessBoard::ChessBoard()
 {
-		current_turn = white;
-		setup();
-		cout << "A new chess game is started!" << endl;
+		resetBoard();
 }
 
 ChessBoard::~ChessBoard()
@@ -137,12 +135,12 @@ void ChessBoard::submitMove(string source_square, string destination_square)
 
 		//update board
 		board[destination_square] = board[source_square];
-		map<string,Piece*>::iterator previous_position = board.find(source_square);
-		board.erase(previous_position);
+		board.erase(source_square);
 
 		//check if own king in check now
 		string king_square = get_king_square(current_turn);
-		if (is_in_check(king_square))
+        Piece* king_piece = get_piece(king_square);
+		if (is_in_check(king_square, king_piece))
 		{
 			cout << colour_str << "'s " << piece_str << " cannot move to ";
 			cout << destination_square;
@@ -152,6 +150,8 @@ void ChessBoard::submitMove(string source_square, string destination_square)
 			board[source_square] = piece_ptr;
 			if (fatality)
 				board[destination_square] = marked_for_death;
+			else
+				board.erase(destination_square);
 
 			return;
 		}
@@ -167,14 +167,30 @@ void ChessBoard::submitMove(string source_square, string destination_square)
 			cout << " taking " << dead_colour_str << "'s " << dead_piece_str;
 		cout << endl;
 
-		//check if opponent in checkmate
-		//check if opponent in check
-		string opponent_king_square = get_king_square(opponent_colour());
-		if (is_in_check(opponent_king_square))
-		{
-			cout << opponent_colour_str() << " is in check";
-			cout << endl;
-		}
+        string opponent_king_square = get_king_square(opponent_colour());
+        Piece* opponent_king_piece = get_piece(opponent_king_square);
+
+        //check if opponent in checkmate or stalemate
+        if (none_can_move(opponent_colour()))
+        {
+			if (is_in_check(opponent_king_square, opponent_king_piece))
+			{
+				cout << opponent_colour_str() << " is in checkmate";
+				cout << endl;
+			}
+			else if (!is_in_check(opponent_king_square, opponent_king_piece))
+			{
+				cout << "Stalemate!";
+				cout << endl;
+			}
+        }
+
+        //check if opponent in check
+        else if (is_in_check(opponent_king_square, opponent_king_piece))
+        {
+            cout << opponent_colour_str() << " is in check";
+            cout << endl;
+        }
 
 		/*change first_turn flag to false*/
 		piece_ptr->first_turn = false;
@@ -253,25 +269,191 @@ string ChessBoard::get_king_square(colour player)
 	return "";
 }
 
-bool ChessBoard::is_in_check(string checked_square)
+bool ChessBoard::is_in_check(string checked_square, Piece* checked_piece)
 {
-	Piece* checked_piece = (board.find(checked_square))->second;
+    map<string,Piece*>::iterator it;
+    for (it=board.begin(); it !=board.end(); ++it)
+    {
+        Piece* piece_ptr = it->second;
+        string piece_square = it->first;
+        // for all pieces of the opposite colour to checked piece
+        if (piece_ptr->piece_colour != checked_piece->piece_colour)
+        {
+            // get list of that piece's valid moves
+            set<string> valid_move_list;
+            piece_ptr->valid_moves(this, piece_square, valid_move_list);
 
-	map<string,Piece*>::iterator it;
-	for (it=board.begin(); it !=board.end(); ++it)
+            // if a valid move == king square, return true for check
+            if (valid_move_list.find(checked_square) != valid_move_list.end())
+                return true;
+        }
+    }
+    return false;
+}
+
+
+bool ChessBoard::none_can_move(colour player)
+{
+	string king_square = get_king_square(player);
+	Piece* king_piece = get_piece(king_square);
+
+	// check if king is unable to move without going into check
+	if (!can_king_move(king_square, king_piece))
 	{
-		Piece* piece_ptr = it->second;
-		string piece_square = it->first;
-		if (piece_ptr->piece_colour != checked_piece->piece_colour)
-		{
-			set<string> valid_move_list;
-			piece_ptr->valid_moves(this, piece_square, valid_move_list);
+		map<string,Piece*> board_dup = board;
+		map<string,Piece*>::iterator it;
 
-			if (valid_move_list.find(checked_square) != valid_move_list.end())
-				return true;
+		//for each piece on the board (copy of board so we don't break iterator)...
+		for (it=board_dup.begin(); it !=board_dup.end(); ++it)
+		{
+			string piece_square = it->first;
+			Piece* piece_ptr = it->second;
+
+			//if piece is same colour as king but not king
+			if (piece_ptr->piece_colour == king_piece->piece_colour && piece_ptr->type != king)
+			{
+				// get list of that piece's valid moves
+				set<string> valid_move_list;
+				piece_ptr->valid_moves(this, piece_square, valid_move_list);
+
+				// do each of the possible moves
+				set<string>::iterator moves;
+				for (moves=valid_move_list.begin();moves!=valid_move_list.end();++moves)
+				{
+					string source = piece_square;
+					string dest = *moves;
+					Piece* taken_piece;
+
+					bool taken = false;
+					if (is_piece(dest))
+					{
+						taken_piece = get_piece(dest);
+						taken = true;
+					}
+
+					//do the move
+					board[dest] = board[source];
+					board.erase(source);
+
+					//see if we aren't in check after move
+					bool in_check = true;
+					if (!is_in_check(king_square,king_piece))
+						in_check = false;
+
+					//roll back the move
+					board[source] = board[dest];
+					if (taken)
+						board[dest] = taken_piece;
+					else
+						board.erase(dest);
+
+					if (!in_check)
+						return false;
+				}
+			}
 		}
+		//return that we are in none can move if the loop did not succeed at
+		//finding a move to get us out of check
+		return true;
 	}
 	return false;
+}
+
+
+
+/*
+bool ChessBoard::is_in_checkmate(string king_square, Piece* king_piece)
+{
+    if (is_in_check(king_square, king_piece))
+    {
+        // check if king is unable to move without going into check
+        if (!can_king_move(king_square, king_piece))
+        {
+			map<string,Piece*> board_dup = board;
+			map<string,Piece*>::iterator it;
+
+            //for each piece on the board (copy of board so we don't break iterator)...
+			for (it=board_dup.begin(); it !=board_dup.end(); ++it)
+			{
+				string piece_square = it->first;
+				Piece* piece_ptr = it->second;
+
+				//if piece is same colour as king but not king
+				if (piece_ptr->piece_colour == king_piece->piece_colour && piece_ptr->type != king)
+				{
+					// get list of that piece's valid moves
+					set<string> valid_move_list;
+					piece_ptr->valid_moves(this, piece_square, valid_move_list);
+
+					// do each of the possible moves
+					set<string>::iterator moves;
+					for (moves=valid_move_list.begin();moves!=valid_move_list.end();++moves)
+					{
+						string source = piece_square;
+						string dest = *moves;
+						Piece* taken_piece;
+
+						bool taken = false;
+						if (is_piece(dest))
+						{
+							taken_piece = get_piece(dest);
+							taken = true;
+						}
+
+						//do the move
+						board[dest] = board[source];
+						board.erase(source);
+
+						//see if it got us out of check
+						bool in_checkmate = true;
+						if (!is_in_check(king_square,king_piece))
+							in_checkmate = false;
+
+						//roll back the move
+						board[source] = board[dest];
+						if (taken)
+							board[dest] = taken_piece;
+						else
+							board.erase(dest);
+
+						if (!in_checkmate)
+							return false;
+					}
+				}
+			}
+			//return that we are in checkmate if the loop did not succeed at
+			//finding a move to get us out of check
+			return true;
+
+            //STALEMATE
+            //check that king not in check
+            //loop through pieces of same colour as king (EXcluding king)
+            //loop through their valid move list
+            //do the move, ensure the king not in check
+            //if not in check, roll back & return false, we're not in stalemate
+            //finally check can_king_move
+            //after loops done, return true, we're in stalemate
+        }
+        return false;
+    }
+    return false;
+}
+*/
+
+bool ChessBoard::can_king_move(string king_square, Piece* king_piece)
+{
+    // get all possible moves of king
+    set<string> king_moves;
+    king_piece->valid_moves(this,king_square,king_moves);
+
+    // see if any of those moves would not be in check
+    set<string>::iterator move;
+    for (move = king_moves.begin(); move != king_moves.end(); ++move)
+    {
+        if (!is_in_check(*move, king_piece))
+            return true;
+    }
+    return false;
 }
 
 colour ChessBoard::opponent_colour()

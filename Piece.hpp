@@ -20,19 +20,18 @@ class Piece {
 		string colour_str();
 		bool first_turn;
 
-		//move constructor to protected once we have pure virtual function
 		Piece(piece_type type_of_piece, colour the_colour);
 		virtual ~Piece(){}
 
 		//adds list of valid move squares to call-by-reference valid_list
 		virtual void valid_moves(ChessBoard *cb, string square, set<string>& valid_list)=0;
 
-		/*recursively steps through board using coordinate arguments,
-		checking move validity. Updates call-by-reference set
-		with valid squares*/
+        /*Recursively steps along board in a direction
+        using coordinate arguments, checking move validity.
+        Updates call-by-reference set with list of valid squares*/
 		void step_recursive(ChessBoard *cb, string square, int h, int v, set<string>& list);
 
-		// checks if an individual square is valid for a piece
+        // checks if a square is valid for any piece to move to
 		bool is_valid_move(ChessBoard *cb, string square);
 
 		//checks if piece at square is an opponent's piece

@@ -33,7 +33,10 @@ class ChessBoard {
 		// returns pointer to piece at square
 		Piece* get_piece(string square);
 
-		// returns true if square has piece
+
+
+        /*-----PUBLIC UTILITIES------------------------------------*/
+        // returns true if square has piece
 		bool is_piece(string square);
 
 		//returns true if square is on board
@@ -42,15 +45,27 @@ class ChessBoard {
 		//adds coords to square and return new square
 		string change_square(string square, int file, int rank);
 
-		// checks if a players king is in check
-		bool is_in_check(string checked_square);
 
-		// get position of a players king
-		string get_king_square(colour player);
 
-		/*
-		bool is_in_checkmate(string king_square);
-		*/
+        /*-----CHECK & CHECKMATE METHODS---------------------------*/
+
+        // checks if a players king is in check
+        bool is_in_check(string checked_square, Piece* checked_piece);
+
+        bool none_can_move(colour player);
+
+        // checks if a players is in checkmate
+        //bool is_in_checkmate(string king_square, Piece* king_piece);
+
+        // returns false if all kings move options put it in check
+        bool can_king_move(string king_square, Piece* king_piece);
+
+        // get position of a players king
+        string get_king_square(colour player);
+
+        /*---------------------------------------------------------*/
+
+
 
 		// returns opponent colour as enum type or string
 		colour opponent_colour();
