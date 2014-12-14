@@ -10,6 +10,7 @@ Piece::Piece(piece_type type_of_piece, colour the_colour)
 		first_turn = true;
 }
 
+//returns string representation of piece type
 string Piece::piece_type_str()
 {
 		switch(type)
@@ -24,6 +25,7 @@ string Piece::piece_type_str()
 		}
 }
 
+//returns string representation of piece colour
 string Piece::colour_str()
 {
 		switch(piece_colour)
@@ -34,7 +36,7 @@ string Piece::colour_str()
 		}
 }
 
-
+// returns true if piece belongs to opponent
 bool Piece::is_opponent_piece(ChessBoard *cb, string square)
 {
 		if (!(cb->is_on_board(square)))
@@ -50,6 +52,8 @@ bool Piece::is_opponent_piece(ChessBoard *cb, string square)
 }
 
 
+/*Recursively steps along board in a direction using coordinate arguments,
+checking move validity. Updates call-by-ref set with list of valid squares*/
 void Piece::step_recursive(ChessBoard *cb, string square, int h, int v, set<string>& list)
 {
 		string new_square = cb->change_square(square,h,v);
@@ -65,6 +69,7 @@ void Piece::step_recursive(ChessBoard *cb, string square, int h, int v, set<stri
 			return;
 }
 
+//returns true if move is valid
 bool Piece::is_valid_move(ChessBoard *cb, string square)
 {
 		if (!(cb->is_on_board(square)))

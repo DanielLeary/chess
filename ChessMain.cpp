@@ -14,35 +14,6 @@ int main() {
     ChessBoard cb;
     cout << endl;
 
-	//my tests ------------------------------------------
-	/*
-	cb.resetBoard();
-	cout << endl;
-
-	//testing for is_on_board
-	cb.submitMove("D9","D9");
-	cb.submitMove("D/","D/");
-	cb.submitMove("I9","I9");
-	cb.submitMove("@9","@9");
-
-	//testing for source=dest
-	cb.submitMove("A7","A7");
-
-	// testing no piece on square
-	cb.submitMove("B6","B5");
-
-	// testing wrong turn
-	cb.submitMove("B7","B6");
-
-	// testing change_square
-	cout << cb.change_square("B1",1,1) <<endl;
-	cout << cb.change_square("B1",0,1) <<endl;
-	cout << cb.change_square("B1",1,0) <<endl;
-	cout << cb.change_square("B1",-1,-1) <<endl;
-	*/
-	// ------------------------------------------------
-	
-
     cb.submitMove("D7", "D6");
     cout << endl;
 
@@ -105,8 +76,6 @@ int main() {
 
     cb.submitMove("D3", "G6");
     cout << endl;
-
-	
 
     return 0;
 }
