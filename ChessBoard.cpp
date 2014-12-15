@@ -121,7 +121,7 @@ void ChessBoard::submitMove(string source_square, string destination_square)
 		if (valid_move_list.find(destination_square) == valid_move_list.end())
 		{
 			cout << colour_str << "'s " << piece_str << " cannot move to ";
-			cout << destination_square << "!" << endl << endl;
+			cout << destination_square << "!" << endl;
 			return;
 		}
 
